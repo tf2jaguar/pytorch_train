@@ -48,7 +48,7 @@ def train(model, loader, epoch, optimizer, criterion, device, dtype, batch_size,
     return loss.item(), correct1 / len(loader.dataset), correct5 / len(loader.dataset)
 
 
-def test(model, loader, criterion, device, dtype):
+def val(model, loader, criterion, device, dtype):
     model.eval()
     test_loss = 0
     correct1, correct5 = 0, 0
@@ -69,6 +69,29 @@ def test(model, loader, criterion, device, dtype):
         'Top5: {}/{} ({:.2f}%)'.format(test_loss, int(correct1), len(loader.dataset),
                                        100. * correct1 / len(loader.dataset), int(correct5),
                                        len(loader.dataset), 100. * correct5 / len(loader.dataset)))
+    return test_loss, correct1 / len(loader.dataset), correct5 / len(loader.dataset)
+
+
+def test(model, loader, criterion, device, dtype, classes):
+    model.eval()
+    test_loss = 0
+    correct1, correct5 = 0, 0
+
+    for batch_idx, (data, target) in enumerate(loader):
+        data, target = data.to(device=device, dtype=dtype), target.to(device=device)
+        with torch.no_grad():
+            output = model(data)
+
+            _, prediction = torch.max(output.data, dim=1)
+            # print('Prediction \n target: %s \n label: %s ' % (prediction, target))
+            print('Predicted: ', ' '.join('%5s' % classes[prediction[j]] for j in range(len(prediction))))
+
+            test_loss += criterion(output, target).item()  # sum up batch loss
+            corr = correct(output, target, topk=(1, 5))
+        correct1 += corr[0]
+        correct5 += corr[1]
+
+    test_loss /= len(loader)
     return test_loss, correct1 / len(loader.dataset), correct5 / len(loader.dataset)
 
 

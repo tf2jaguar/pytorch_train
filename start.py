@@ -15,11 +15,11 @@ from tqdm import trange
 
 import flops_benchmark
 from clr import CyclicLR
-from dataset import get_loaders
+from dataset import get_loaders, get_test_loaders
 from logger import CsvLogger
 from mobile_net import MobileNet2
 from resnet import resnet34
-from run import train, test, save_checkpoint, find_bounds_clr
+from run import train, val, test, save_checkpoint, find_bounds_clr
 
 parser = argparse.ArgumentParser(description='Pytorch training')
 parser.add_argument('--data_root', required=True, metavar='PATH', help='Path to ImageNet train and val folders')
@@ -77,6 +77,9 @@ claimed_acc_top5 = {224: {1.4: 0.925, 1.3: 0.921, 1.0: 0.910, 0.75: 0.896, 0.5: 
                     128: {1.0: 0.869, 0.75: 0.855, 0.5: 0.808, 0.35: 0.750},
                     96: {1.0: 0.832, 0.75: 0.816, 0.5: 0.758, 0.35: 0.704},
                     }
+# CompCars carType
+classes = ('None', 'MPV', 'SUV', 'sedan', 'hatchback', 'minibus', 'fastback', 'estate', 'pickup', 'hardtop convertible',
+           'sports', 'crossover', 'convertible')
 
 
 def main():
@@ -92,7 +95,7 @@ def main():
 
     time_stamp = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
     if args.evaluate:
-        args.results_dir = '/tmp'
+        args.results_dir = './tmp'
     if args.save is '':
         args.save = time_stamp
     save_path = os.path.join(args.results_dir, args.save)
@@ -116,18 +119,16 @@ def main():
         raise ValueError('Wrong type!')  # TODO int8
 
     # define net model
-    model = MobileNet2(input_size=args.input_size, scale=args.scaling, num_classes=args.num_class)
-    # model = resnet34(pretrained=False, modelpath=args.data_root, num_classes=args.num_class)
+    # model = MobileNet2(input_size=args.input_size, scale=args.scaling, num_classes=args.num_class)
+    model = resnet34(pretrained=False, modelpath=args.data_root, num_classes=args.num_class)
     num_parameters = sum([l.nelement() for l in model.parameters()])
     print(model)
     print('number of parameters: {}'.format(num_parameters))
-    print('FLOPs: {}'.format(
-        flops_benchmark.count_flops(resnet34,
-                                    args.batch_size // len(args.gpus) if args.gpus is not None else args.batch_size,
-                                    device, dtype, args.input_size, 3, args.scaling)))
+    # print('FLOPs: {}'.format(
+    #     flops_benchmark.count_flops(MobileNet2,
+    #                                 args.batch_size // len(args.gpus) if args.gpus is not None else args.batch_size,
+    #                                 device, dtype, args.input_size, 3, args.scaling)))
 
-    train_loader, val_loader = get_loaders(args.data_root, args.batch_size, args.batch_size, args.input_size,
-                                           args.workers)
     # define loss function (criterion) and optimizer
     criterion = torch.nn.CrossEntropyLoss()
     if args.gpus is not None:
@@ -137,17 +138,6 @@ def main():
 
     optimizer = torch.optim.SGD(model.parameters(), args.learning_rate, momentum=args.momentum, weight_decay=args.decay,
                                 nesterov=True)
-    if args.find_clr:
-        find_bounds_clr(model, train_loader, optimizer, criterion, device, dtype, min_lr=args.min_lr,
-                        max_lr=args.max_lr, step_size=args.epochs_per_step * len(train_loader), mode=args.mode,
-                        save_path=save_path)
-        return
-
-    if args.clr:
-        scheduler = CyclicLR(optimizer, base_lr=args.min_lr, max_lr=args.max_lr,
-                             step_size=args.epochs_per_step * len(train_loader), mode=args.mode)
-    else:
-        scheduler = MultiStepLR(optimizer, milestones=args.schedule, gamma=args.gamma)
 
     best_test = 0
 
@@ -165,7 +155,7 @@ def main():
         elif os.path.isdir(args.resume):
             checkpoint_path = os.path.join(args.resume, 'checkpoint.pth.tar')
             csv_path = os.path.join(args.resume, 'results.csv')
-            print("=> loading checkpoint '{}'".format(checkpoint_path))
+            print("=> loading checkpoint csv '{}'".format(checkpoint_path))
             checkpoint = torch.load(checkpoint_path, map_location=device)
             args.start_epoch = checkpoint['epoch'] - 1
             best_test = checkpoint['best_prec1']
@@ -181,10 +171,25 @@ def main():
             print("=> no checkpoint found at '{}'".format(args.resume))
 
     if args.evaluate:
-        loss, top1, top5 = test(model, val_loader, criterion, device, dtype)
+        test_loader = get_test_loaders(args.data_root, args.batch_size, args.input_size, args.workers)
+        loss, top1, top5 = test(model, test_loader, criterion, device, dtype,classes)
         print("loss:{}, top1:{}, top5:{}".format(loss, top1, top5))
         # TODO
         return
+
+    train_loader, val_loader = get_loaders(args.data_root, args.batch_size, args.batch_size, args.input_size,
+                                           args.workers)
+    if args.find_clr:
+        find_bounds_clr(model, train_loader, optimizer, criterion, device, dtype, min_lr=args.min_lr,
+                        max_lr=args.max_lr, step_size=args.epochs_per_step * len(train_loader), mode=args.mode,
+                        save_path=save_path)
+        return
+
+    if args.clr:
+        scheduler = CyclicLR(optimizer, base_lr=args.min_lr, max_lr=args.max_lr,
+                             step_size=args.epochs_per_step * len(train_loader), mode=args.mode)
+    else:
+        scheduler = MultiStepLR(optimizer, milestones=args.schedule, gamma=args.gamma)
 
     csv_logger = CsvLogger(filepath=save_path, data=data)
     csv_logger.save_params(sys.argv, args)
@@ -210,7 +215,7 @@ def train_network(start_epoch, epochs, scheduler, model, train_loader, val_loade
         #     scheduler.step()
         train_loss, train_accuracy1, train_accuracy5, = train(model, train_loader, epoch, optimizer, criterion, device,
                                                               dtype, batch_size, log_interval, scheduler)
-        test_loss, test_accuracy1, test_accuracy5 = test(model, val_loader, criterion, device, dtype)
+        test_loss, test_accuracy1, test_accuracy5 = val(model, val_loader, criterion, device, dtype)
 
         csv_logger.write({'epoch': epoch + 1, 'val_error1': 1 - test_accuracy1, 'val_error5': 1 - test_accuracy5,
                           'val_loss': test_loss, 'train_error1': 1 - train_accuracy1,

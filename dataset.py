@@ -85,3 +85,10 @@ def get_loaders(dataroot, val_batch_size, train_batch_size, input_size, workers)
     train_loader = torch.utils.data.DataLoader(train_data, batch_size=train_batch_size, shuffle=True,
                                                num_workers=workers, pin_memory=True)
     return train_loader, val_loader
+
+
+def get_test_loaders(dataroot, batch_size, input_size, workers):
+    test_data = CarDataset(dataroot + '/test.txt', './data', transform=get_transform(True, input_size))
+    test_loader = torch.utils.data.DataLoader(test_data, batch_size=batch_size, shuffle=False,
+                                              num_workers=workers, pin_memory=True)
+    return test_loader
