@@ -83,8 +83,7 @@ def test(model, loader, criterion, device, dtype, classes):
             output = model(data)
 
             _, prediction = torch.max(output.data, dim=1)
-            # print('Prediction \n target: %s \n label: %s ' % (prediction, target))
-            print('Predicted: ', ' '.join('%5s' % classes[prediction[j]] for j in range(len(prediction))))
+            print('Predicted: ', '; '.join('%5s' % classes[prediction[j]] for j in range(len(prediction))))
 
             test_loss += criterion(output, target).item()  # sum up batch loss
             corr = correct(output, target, topk=(1, 5))
