@@ -106,5 +106,6 @@ venv.bak/
 *.pyc
 .idea
 *.tar
+tmp
 /data/*.txt
 /results/*_*
