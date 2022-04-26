@@ -1,3 +1,12 @@
+<div align="center">  
+    <p>
+        <a href="https://jelly54.github.io"><img src="https://badgen.net/badge/jelly54/read?icon=sourcegraph&color=4ab8a1" alt="read" /></a>
+        <img src="https://badgen.net/github/stars/jelly54/pytorch_train?icon=github&color=4ab8a1" alt="stars" />
+        <img src="https://badgen.net/github/forks/jelly54/pytorch_train?icon=github&color=4ab8a1" alt="forks" />
+        <img src="https://badgen.net/github/open-issues/jelly54/pytorch_train?icon=github" alt="issues" />
+    </p>
+</div>
+
 # pytorch_train
 
 ## 模型训练
@@ -127,3 +136,11 @@ python transfor.py
 - 需要修改启动脚本中 **--num_class**，模型类别
 
 目前项目中具备很多备注记录，稍加review代码就可以理解，如有不清楚，可以私信询问。
+
+### 鼓励一下
+
+<center class="half">
+<img alt="image-qxUDIO" src="https://s1.ax1x.com/2022/04/07/qxUDIO.png" width="200" height="240" /><img src="https://s1.ax1x.com/2022/04/07/qxaHAK.jpg" alt="image-qxUBdK" width="200" height="240" />
+</center>
+
+有偿提供全套环境搭建+数据集下载+模型迁移+论文范本+技术指导
