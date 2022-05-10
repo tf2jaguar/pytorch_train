@@ -1,9 +1,9 @@
 <div align="center">  
     <p>
-        <a href="https://jelly54.github.io"><img src="https://badgen.net/badge/jelly54/read?icon=sourcegraph&color=4ab8a1" alt="read" /></a>
-        <img src="https://badgen.net/github/stars/jelly54/pytorch_train?icon=github&color=4ab8a1" alt="stars" />
-        <img src="https://badgen.net/github/forks/jelly54/pytorch_train?icon=github&color=4ab8a1" alt="forks" />
-        <img src="https://badgen.net/github/open-issues/jelly54/pytorch_train?icon=github" alt="issues" />
+        <a href="https://tf2jaguar.github.io"><img src="https://badgen.net/badge/tf2jaguar/read?icon=sourcegraph&color=4ab8a1" alt="read" /></a>
+        <img src="https://badgen.net/github/stars/tf2jaguar/pytorch_train?icon=github&color=4ab8a1" alt="stars" />
+        <img src="https://badgen.net/github/forks/tf2jaguar/pytorch_train?icon=github&color=4ab8a1" alt="forks" />
+        <img src="https://badgen.net/github/open-issues/tf2jaguar/pytorch_train?icon=github" alt="issues" />
     </p>
 </div>
 
@@ -11,7 +11,7 @@
 
 ## 模型训练
 
-Github 地址：[pytorch_train](https://github.com/jelly54/pytorch_train)
+Github 地址：[pytorch_train](https://github.com/tf2jaguar/pytorch_train)
 
 ![UtyvKf.png](https://s1.ax1x.com/2020/07/14/UtyvKf.png)
 
@@ -63,7 +63,7 @@ pytorch_train
 
 ## 模型移植
 
-Github 地址：[pytorch_train/transfor](https://github.com/jelly54/pytorch_train/blob/master/util/transfor.py)
+Github 地址：[pytorch_train/transfor](https://github.com/tf2jaguar/pytorch_train/blob/master/util/transfor.py)
 
 
 ```python
